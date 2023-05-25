@@ -1,11 +1,25 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"worker-pool/internal/workerpool"
 )
+
+func functionWithoutParams() error {
+	time.Sleep(500 * time.Millisecond)
+	fmt.Println("Executing functionWithoutParams")
+	return nil
+}
+
+func functionWithParams(param int) error {
+	time.Sleep(500 * time.Millisecond)
+	fmt.Printf("Executing functionWithParams with param: %d\n", param)
+	return nil
+}
 
 func main() {
 
@@ -13,7 +27,7 @@ func main() {
 	defer closeFn()
 
 	// Define an HTTP handler for the API endpoint
-	http.HandleFunc("/api/call-function", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/api/new-task", func(w http.ResponseWriter, r *http.Request) {
 		// Call the functionToCall asynchronously using the worker pool
 		wp, errIn := workerpool.NewWorkerPoolInstance()
 		if errIn != nil {
@@ -23,9 +37,13 @@ func main() {
 			return
 		}
 
-		errNewCall := wp.NewCall()
-		if errNewCall != nil {
-			log.Println("Error submitting task to worker pool:", errNewCall)
+		newTask := workerpool.CreateTask(func() error {
+			return functionWithParams(1)
+		})
+
+		errNewTask := wp.SubmitNewTask(*newTask)
+		if errNewTask != nil {
+			log.Println("Error submitting task to worker pool:", errNewTask)
 			return
 		}
 

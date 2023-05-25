@@ -7,6 +7,8 @@ import (
 	"github.com/panjf2000/ants/v2"
 )
 
+type TaskFunc func() error
+
 type Task struct {
 	Func func() error
 }

@@ -12,16 +12,6 @@ const poolSize = 10
 var workerPool *WorkerPool
 var onceInit sync.Once
 
-func functionWithoutParams() error {
-	fmt.Println("Executing functionWithoutParams")
-	return nil
-}
-
-func functionWithParams(param int) error {
-	fmt.Printf("Executing functionWithParams with param: %d\n", param)
-	return nil
-}
-
 func InitWorkerPool() {
 	onceInit.Do(func() {
 		// Create a new worker pool
@@ -54,25 +44,20 @@ func NewWorkerPoolInstance() (*WorkerPool, error) {
 	return workerPool, nil
 }
 
-func (wp *WorkerPool) NewCall() error {
+func CreateTask(fn TaskFunc) *Task {
+	return &Task{
+		Func: func() error {
+			return fn()
+		},
+	}
+}
 
-	// Create a slice of tasks
-	tasks := []*Task{
-		{Func: functionWithoutParams},
-		{Func: func() error { return functionWithParams(1) }},
-		{Func: functionWithoutParams},
-		{Func: func() error { return functionWithParams(2) }},
-		// Add more tasks as needed...
+func (wp *WorkerPool) SubmitNewTask(task Task) error {
+
+	err := wp.SubmitTask(&task)
+	if err != nil {
+		fmt.Println("Error submitting task to worker pool from client:", err)
 	}
 
-	// Submit all tasks to the worker pool
-	for _, task := range tasks {
-		err := wp.SubmitTask(task)
-		if err != nil {
-			// Handle error
-			fmt.Println("Error submitting task to worker pool from client:", err)
-		}
-	}
-
-	return nil
+	return err
 }
