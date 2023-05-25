@@ -93,28 +93,68 @@ func handleBatchProcess(w http.ResponseWriter, r *http.Request) {
 	// Divide the data into smaller chunks
 	chunks := divideDataIntoChunks(request.Data, request.ChunkSize)
 
+	// Create a channel to receive the results of each chunk processing
+	results := make(chan error, len(chunks))
+
+	// Submit each chunk as a task to the worker pool
+	//for _, chunk := range chunks {
+	//	chunk := chunk // Create a new variable to avoid closure-related issues
+	//
+	//	newTask := workerpool.CreateTask(func() error {
+	//		return processDataChunk(chunk)
+	//	})
+	//
+	//	err := wp.SubmitNewTask(*newTask)
+	//
+	//	if err != nil {
+	//		log.Println("Error submitting task to worker pool:", err)
+	//		results <- err // Report the error to the results channel
+	//	}
+	//}
+
+	// Create a wait group to track the completion of the tasks for the current request
 	var wg sync.WaitGroup
-	wg.Add(len(chunks))
+	wg.Add(len(chunks)) // Set the wait group count to the number of chunks
 
+	// Submit a separate task to the worker pool for each chunk
 	for _, chunk := range chunks {
-		go func(chunk DataChunk) {
-			defer wg.Done()
+		chunk := chunk // Create a new variable to avoid closure-related issues
 
-			newTask := workerpool.CreateTask(func() error {
-				return processDataChunk(chunk)
-			})
+		newTask := workerpool.CreateTask(func() error {
+			defer wg.Done() // Mark the task as done when it completes
+			return processDataChunk(chunk)
+		})
 
-			errNewTask := wp.SubmitNewTask(*newTask)
-			if errNewTask != nil {
-				log.Println("Error submitting task to worker pool:", errNewTask)
-				return
-			}
+		err := wp.SubmitNewTask(*newTask)
 
-		}(chunk)
+		if err != nil {
+			log.Println("Error submitting task to worker pool:", err)
+			results <- err // Report the error to the results channel
+			wg.Done()      // Mark the task as done in case of error
+		}
 	}
 
-	// Wait for all the chunks to be processed
-	wg.Wait()
+	// Wait for all the tasks associated with the current request to be completed
+	go func() {
+		wg.Wait()
+		close(results) // Close the results channel when all tasks are finished
+	}()
+
+	// Collect the results from the results channel
+	var errors []error
+	for err := range results {
+		if err != nil {
+			errors = append(errors, err)
+		}
+	}
+
+	// Check if any errors occurred during processing
+	if len(errors) > 0 {
+		// Handle the errors accordingly
+		log.Println("Errors occurred during processing:", errors)
+		http.Error(w, "Errors occurred during processing", http.StatusInternalServerError)
+		return
+	}
 
 	response := BatchResponse{
 		Message: "Data processed successfully",
