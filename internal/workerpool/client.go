@@ -36,9 +36,12 @@ func InitWorkerPool() {
 }
 
 func Close() {
-	workerPool.Close()
 	// Wait for all tasks to complete
 	workerPool.WaitAll()
+
+	// Release pool
+	workerPool.Close()
+
 	// Clean up the ants pool
 	ants.Release()
 }
