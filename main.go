@@ -11,22 +11,6 @@ import (
 	"worker-pool/internal/workerpool"
 )
 
-type DataChunk struct {
-	ChunkID int   `json:"chunk_id"`
-	Data    []int `json:"data"`
-}
-
-type BatchRequest struct {
-	TotalData   int         `json:"total_data"`
-	ChunkSize   int         `json:"chunk_size"`
-	Concurrency int         `json:"concurrency"`
-	Data        []DataChunk `json:"data"`
-}
-
-type BatchResponse struct {
-	Message string `json:"message"`
-}
-
 func functionWithoutParams() error {
 	time.Sleep(500 * time.Millisecond)
 	fmt.Println("Executing functionWithoutParams")
@@ -53,27 +37,6 @@ func main() {
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-func divideDataIntoChunks(data []DataChunk, chunkSize int) []DataChunk {
-	chunks := make([]DataChunk, 0)
-	chunk := DataChunk{}
-
-	for _, d := range data {
-		chunk.Data = append(chunk.Data, d.Data...)
-
-		if len(chunk.Data) >= chunkSize {
-			chunks = append(chunks, chunk)
-			chunk = DataChunk{}
-		}
-	}
-
-	// Add the remaining elements as the last chunk
-	if len(chunk.Data) > 0 {
-		chunks = append(chunks, chunk)
-	}
-
-	return chunks
-}
-
 func handleBatchProcess(w http.ResponseWriter, r *http.Request) {
 
 	wp, errIn := workerpool.NewWorkerPoolInstance()
@@ -84,33 +47,17 @@ func handleBatchProcess(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var request BatchRequest
+	var request workerpool.BatchRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	// Divide the data into smaller chunks
-	chunks := divideDataIntoChunks(request.Data, request.ChunkSize)
+	chunks := workerpool.DivideDataIntoChunks(request.Data, request.ChunkSize)
 
 	// Create a channel to receive the results of each chunk processing
 	results := make(chan error, len(chunks))
-
-	// Submit each chunk as a task to the worker pool
-	//for _, chunk := range chunks {
-	//	chunk := chunk // Create a new variable to avoid closure-related issues
-	//
-	//	newTask := workerpool.CreateTask(func() error {
-	//		return processDataChunk(chunk)
-	//	})
-	//
-	//	err := wp.SubmitNewTask(*newTask)
-	//
-	//	if err != nil {
-	//		log.Println("Error submitting task to worker pool:", err)
-	//		results <- err // Report the error to the results channel
-	//	}
-	//}
 
 	// Create a wait group to track the completion of the tasks for the current request
 	var wg sync.WaitGroup
@@ -122,7 +69,7 @@ func handleBatchProcess(w http.ResponseWriter, r *http.Request) {
 
 		newTask := workerpool.CreateTask(func() error {
 			defer wg.Done() // Mark the task as done when it completes
-			return processDataChunk(chunk)
+			return workerpool.ProcessDataChunk(chunk)
 		})
 
 		err := wp.SubmitNewTask(*newTask)
@@ -156,7 +103,7 @@ func handleBatchProcess(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := BatchResponse{
+	response := workerpool.BatchResponse{
 		Message: "Data processed successfully",
 	}
 
@@ -190,13 +137,6 @@ func handleNewTask(w http.ResponseWriter, r *http.Request) {
 
 	// Return a success response
 	w.WriteHeader(http.StatusOK)
-}
-
-func processDataChunk(chunk DataChunk) error {
-	// Process the data chunk
-	// You can perform any operations on the data here
-	log.Printf("Processing chunk %d: %v\n", chunk.ChunkID, chunk.Data)
-	return nil
 }
 
 // Add context in the params
