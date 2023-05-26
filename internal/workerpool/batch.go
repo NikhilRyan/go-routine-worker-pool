@@ -1,6 +1,9 @@
 package workerpool
 
-import "log"
+import (
+	"log"
+	"math"
+)
 
 type DataChunk struct {
 	ChunkID int   `json:"chunk_id"`
@@ -16,6 +19,38 @@ type BatchRequest struct {
 
 type BatchResponse struct {
 	Message string `json:"message"`
+}
+
+type PostBatchRequest struct {
+	Data        []int `json:"data"`
+	ChunkSize   int   `json:"chunkSize"`
+	Concurrency int   `json:"concurrency"`
+}
+
+type PostBatchResult struct {
+	Result int
+	Error  error
+}
+
+type PostBatchResponse struct {
+	Result int   `json:"result"`
+	Error  error `json:"error,omitempty"`
+}
+
+func DivideIntDataIntoChunks(data []int, chunkSize int) [][]int {
+	numChunks := int(math.Ceil(float64(len(data)) / float64(chunkSize)))
+	chunks := make([][]int, numChunks)
+
+	for i := 0; i < numChunks; i++ {
+		startIndex := i * chunkSize
+		endIndex := startIndex + chunkSize
+		if endIndex > len(data) {
+			endIndex = len(data)
+		}
+		chunks[i] = data[startIndex:endIndex]
+	}
+
+	return chunks
 }
 
 func DivideDataIntoChunks(data []DataChunk, chunkSize int) []DataChunk {
@@ -37,6 +72,20 @@ func DivideDataIntoChunks(data []DataChunk, chunkSize int) []DataChunk {
 	}
 
 	return chunks
+}
+
+func ProcessPostDataChunk(chunk []int) (int, error) {
+	// Perform some processing on the chunk
+	result := 0
+	for _, num := range chunk {
+		result += num
+	}
+
+	// Simulate some delay
+	//time.Sleep(time.Second)
+
+	// Return the result
+	return result, nil
 }
 
 func ProcessDataChunk(chunk DataChunk) error {

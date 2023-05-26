@@ -30,14 +30,15 @@ func main() {
 
 	// Define your API routes and handlers
 	http.HandleFunc("/api/new-task", handleNewTask)
-	http.HandleFunc("/api/batch-process", handleBatchProcess)
+	http.HandleFunc("/api/pre-batch-process", handlePreBatchProcess)
+	http.HandleFunc("/api/post-batch-process", handlePostBatchProcess)
 
 	// Start the HTTP server
 	log.Println("Server listening on port 8080...")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-func handleBatchProcess(w http.ResponseWriter, r *http.Request) {
+func handlePreBatchProcess(w http.ResponseWriter, r *http.Request) {
 
 	wp, errIn := workerpool.NewWorkerPoolInstance()
 	if errIn != nil {
@@ -110,6 +111,77 @@ func handleBatchProcess(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func handlePostBatchProcess(w http.ResponseWriter, r *http.Request) {
+
+	wp, errIn := workerpool.NewWorkerPoolInstance()
+	if errIn != nil {
+		// Handle error
+		log.Println("Error getting worker pool:", errIn)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	// Parse the request body to get the data
+	var requestData workerpool.PostBatchRequest
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	// Divide the data into chunks
+	chunks := workerpool.DivideIntDataIntoChunks(requestData.Data, requestData.ChunkSize)
+
+	// Create a channel to collect the results of each task
+	results := make(chan workerpool.PostBatchResult, len(chunks))
+
+	// Submit each chunk as a task to the worker pool
+	for _, chunk := range chunks {
+
+		newTask := workerpool.CreateTask(func() error {
+			result, err := workerpool.ProcessPostDataChunk(chunk)
+			results <- workerpool.PostBatchResult{Result: result, Error: err}
+			return err
+		})
+
+		err := wp.SubmitTask(newTask)
+		if err != nil {
+			log.Println("Error submitting task to worker pool:", err)
+			results <- workerpool.PostBatchResult{Error: err}
+		}
+	}
+
+	// Collect the results from the tasks
+	var batchResults []workerpool.PostBatchResult
+	for range chunks {
+		result := <-results
+		batchResults = append(batchResults, result)
+	}
+
+	// Close the results channel
+	close(results)
+
+	// Combine the results
+	var combinedResult workerpool.PostBatchResult
+	for _, result := range batchResults {
+		combinedResult.Result += result.Result
+		if result.Error != nil {
+			combinedResult.Error = result.Error
+		}
+	}
+
+	// Return the combined result
+	response := workerpool.PostBatchResponse{
+		Result: combinedResult.Result,
+		Error:  combinedResult.Error,
+	}
+	err = json.NewEncoder(w).Encode(response)
+	if err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		return
 	}
 }
