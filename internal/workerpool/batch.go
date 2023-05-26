@@ -22,6 +22,11 @@ type BatchResponse struct {
 	Message string `json:"message"`
 }
 
+type StatsResponse struct {
+	Message string    `json:"message"`
+	Stats   Statistic `json:"stats"`
+}
+
 type PostBatchRequest struct {
 	Data        []int `json:"data"`
 	ChunkSize   int   `json:"chunkSize"`

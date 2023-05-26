@@ -32,6 +32,7 @@ func main() {
 	http.HandleFunc("/api/single-task", handleSingleTask)
 	http.HandleFunc("/api/pre-batch-process", handlePreBatchProcess)
 	http.HandleFunc("/api/post-batch-process", handlePostBatchProcess)
+	http.HandleFunc("/api/get-workerpool-stats", handleWorkerPoolStats)
 
 	// Start the HTTP server
 	log.Println("Server listening on port 8080...")
@@ -195,6 +196,7 @@ func handlePostBatchProcess(w http.ResponseWriter, r *http.Request) {
 	// Pool Stats in End
 	fmt.Println("Workerpool stats in end: ", wp.GetStats())
 
+	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
@@ -231,6 +233,30 @@ func handleSingleTask(w http.ResponseWriter, r *http.Request) {
 
 	// Return a success response
 	w.WriteHeader(http.StatusOK)
+}
+
+func handleWorkerPoolStats(w http.ResponseWriter, r *http.Request) {
+
+	// Call the functionToCall asynchronously using the worker pool
+	wp, errIn := workerpool.NewWorkerPoolInstance()
+	if errIn != nil {
+		// Handle error
+		log.Println("Error getting worker pool:", errIn)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	response := workerpool.StatsResponse{
+		Message: "Worker pool statistics",
+		Stats:   wp.GetStats(),
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 // Add context in the params
