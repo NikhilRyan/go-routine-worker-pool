@@ -29,7 +29,7 @@ func main() {
 	defer closeFn()
 
 	// Define your API routes and handlers
-	http.HandleFunc("/api/new-task", handleNewTask)
+	http.HandleFunc("/api/single-task", handleSingleTask)
 	http.HandleFunc("/api/pre-batch-process", handlePreBatchProcess)
 	http.HandleFunc("/api/post-batch-process", handlePostBatchProcess)
 
@@ -202,7 +202,7 @@ func handlePostBatchProcess(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handleNewTask(w http.ResponseWriter, r *http.Request) {
+func handleSingleTask(w http.ResponseWriter, r *http.Request) {
 
 	// Call the functionToCall asynchronously using the worker pool
 	wp, errIn := workerpool.NewWorkerPoolInstance()
