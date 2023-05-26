@@ -19,6 +19,13 @@ type WorkerPool struct {
 	completion chan struct{}
 }
 
+type Statistic struct {
+	PoolCapacity int
+	Running      int
+	Free         int
+	Waiting      int
+}
+
 func NewWorkerPool(poolSize int) (*WorkerPool, error) {
 	p, err := ants.NewPool(poolSize)
 	if err != nil {
@@ -102,4 +109,14 @@ func (wg *WaitGroup) Wait() {
 	}
 
 	wg.wg.Wait()
+}
+
+// GetStatistics retrieves the statistics of the worker pool.
+func (wp *WorkerPool) getStatistics() Statistic {
+	return Statistic{
+		PoolCapacity: wp.pool.Cap(),
+		Running:      wp.pool.Running(),
+		Free:         wp.pool.Free(),
+		Waiting:      wp.pool.Waiting(),
+	}
 }

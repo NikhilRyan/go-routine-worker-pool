@@ -48,6 +48,9 @@ func handlePreBatchProcess(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Pool Stats in Start
+	fmt.Println("Workerpool stats in start: ", wp.GetStats())
+
 	var request workerpool.BatchRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -108,6 +111,9 @@ func handlePreBatchProcess(w http.ResponseWriter, r *http.Request) {
 		Message: "Data processed successfully",
 	}
 
+	// Pool Stats in End
+	fmt.Println("Workerpool stats in end: ", wp.GetStats())
+
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -125,6 +131,9 @@ func handlePostBatchProcess(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Pool Stats in Start
+	fmt.Println("Workerpool stats in start: ", wp.GetStats())
+
 	// Parse the request body to get the data
 	var requestData workerpool.PostBatchRequest
 	err := json.NewDecoder(r.Body).Decode(&requestData)
@@ -140,13 +149,16 @@ func handlePostBatchProcess(w http.ResponseWriter, r *http.Request) {
 	results := make(chan workerpool.PostBatchResult, len(chunks))
 
 	// Submit each chunk as a task to the worker pool
-	for _, chunk := range chunks {
-
+	for i, chunk := range chunks {
+		fmt.Printf("chunk %v, %v\n", i, chunk)
 		newTask := workerpool.CreateTask(func() error {
-			result, err := workerpool.ProcessPostDataChunk(chunk)
+			result, err := workerpool.ProcessPostDataChunk(i, chunk)
 			results <- workerpool.PostBatchResult{Result: result, Error: err}
 			return err
 		})
+
+		// Pool Stats in between
+		fmt.Println("Workerpool stats in between: ", wp.GetStats())
 
 		err := wp.SubmitTask(newTask)
 		if err != nil {
@@ -179,6 +191,10 @@ func handlePostBatchProcess(w http.ResponseWriter, r *http.Request) {
 		Result: combinedResult.Result,
 		Error:  combinedResult.Error,
 	}
+
+	// Pool Stats in End
+	fmt.Println("Workerpool stats in end: ", wp.GetStats())
+
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
@@ -197,6 +213,9 @@ func handleNewTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Pool Stats in Start
+	fmt.Println("Workerpool stats in start: ", wp.GetStats())
+
 	newTask := workerpool.CreateTask(func() error {
 		return functionWithParams(1)
 	})
@@ -206,6 +225,9 @@ func handleNewTask(w http.ResponseWriter, r *http.Request) {
 		log.Println("Error submitting task to worker pool:", errNewTask)
 		return
 	}
+
+	// Pool Stats in end
+	fmt.Println("Workerpool stats in end: ", wp.GetStats())
 
 	// Return a success response
 	w.WriteHeader(http.StatusOK)

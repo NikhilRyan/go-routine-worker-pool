@@ -3,6 +3,7 @@ package workerpool
 import (
 	"log"
 	"math"
+	"time"
 )
 
 type DataChunk struct {
@@ -74,7 +75,7 @@ func DivideDataIntoChunks(data []DataChunk, chunkSize int) []DataChunk {
 	return chunks
 }
 
-func ProcessPostDataChunk(chunk []int) (int, error) {
+func ProcessPostDataChunk(chunkId int, chunk []int) (int, error) {
 	// Perform some processing on the chunk
 	result := 0
 	for _, num := range chunk {
@@ -82,8 +83,9 @@ func ProcessPostDataChunk(chunk []int) (int, error) {
 	}
 
 	// Simulate some delay
-	//time.Sleep(time.Second)
+	time.Sleep(time.Second)
 
+	log.Printf("Processing chunk: %v, result: %v", chunkId, result)
 	// Return the result
 	return result, nil
 }

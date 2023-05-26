@@ -61,3 +61,7 @@ func (wp *WorkerPool) SubmitNewTask(task Task) error {
 
 	return err
 }
+
+func (wp *WorkerPool) GetStats() Statistic {
+	return wp.getStatistics()
+}
