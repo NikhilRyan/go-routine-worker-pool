@@ -88,7 +88,7 @@ func ProcessPostDataChunk(chunkId int, chunk []int) (int, error) {
 	}
 
 	// Simulate some delay
-	time.Sleep(time.Second)
+	time.Sleep(time.Second * 2)
 
 	log.Printf("Processing chunk: %v, result: %v", chunkId, result)
 	// Return the result

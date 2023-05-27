@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	"worker-pool/internal/workerpool"
@@ -34,9 +37,61 @@ func main() {
 	http.HandleFunc("/api/post-batch-process", handlePostBatchProcess)
 	http.HandleFunc("/api/get-workerpool-stats", handleWorkerPoolStats)
 
+	// Start a goroutine to continuously check the running goroutines
+	go func() {
+		for {
+
+			wp, errIn := workerpool.NewWorkerPoolInstance()
+			if errIn != nil {
+				log.Println("Error getting worker pool:", errIn)
+			}
+
+			// Get running count
+			running := wp.GetStats().Running
+
+			if running > 0 {
+				fmt.Printf("There are %d running goroutines\n", running)
+			} else {
+				fmt.Println("No running goroutines")
+				break
+			}
+
+			// time.Sleep(time.Second)
+		}
+	}()
+
 	// Start the HTTP server
-	log.Println("Server listening on port 8080...")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	go func() {
+		log.Println("Server listening on port 8080...")
+		if err := http.ListenAndServe(":8080", nil); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	// Wait for termination signal
+	waitForTerminationSignal()
+}
+
+func waitForTerminationSignal() {
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
+	<-signalChan
+
+	wp, errIn := workerpool.NewWorkerPoolInstance()
+	if errIn != nil {
+		log.Println("Error getting worker pool:", errIn)
+		return
+	}
+
+	// Check if there are any running workers
+	log.Println("Termination request received")
+	if wp.GetStats().Running > 0 {
+		log.Println("Waiting for all workers to finish...")
+		wp.Close()
+		wp.WaitAll()
+	}
+
+	log.Println("Service gracefully terminated")
 }
 
 func handlePreBatchProcess(w http.ResponseWriter, r *http.Request) {
