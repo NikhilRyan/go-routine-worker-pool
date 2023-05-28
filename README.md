@@ -18,6 +18,14 @@ To install the Worker Pool with Batching library, use the following command:
 go get github.com/your-username/workerpool
 ```
 
+## Dependencies
+
+The Worker Pool with Batching library relies on the `github.com/panjf2000/ants/v2` library for managing goroutines. Please ensure you have it installed. You can install it using the following command:
+
+```
+go get github.com/panjf2000/ants/v2
+```
+
 ## Usage
 
 Import the Worker Pool with Batching library into your Go code:
@@ -112,7 +120,6 @@ To handle termination signals and ensure graceful shutdown of the worker pool, u
 ```go
 workerpool.WaitForTerminationSignal(wp)
 ```
-
 
 ## Contributing
 
