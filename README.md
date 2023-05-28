@@ -113,9 +113,6 @@ To handle termination signals and ensure graceful shutdown of the worker pool, u
 workerpool.WaitForTerminationSignal(wp)
 ```
 
-## Example
-
-For a detailed example on how to use the Worker Pool with Batching library, refer to the provided [example.go](example.go) file.
 
 ## Contributing
 
