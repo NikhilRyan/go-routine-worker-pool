@@ -1,0 +1,119 @@
+{
+  "collection": {
+    "info": {
+      "name": "Worker Pool",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+      "updatedAt": "2023-05-26T20:50:44.000Z"
+    },
+    "item": [
+      {
+        "name": "Single Task",
+        "protocolProfileBehavior": {
+          "disableBodyPruning": true
+        },
+        "request": {
+          "method": "GET",
+          "header": [],
+          "url": {
+            "raw": "localhost:8080/api/single-task",
+            "host": [
+              "localhost"
+            ],
+            "port": "8080",
+            "path": [
+              "api",
+              "single-task"
+            ]
+          }
+        },
+        "response": []
+      },
+      {
+        "name": "Worker Pool Status",
+        "protocolProfileBehavior": {
+          "disableBodyPruning": true
+        },
+        "request": {
+          "method": "GET",
+          "header": [],
+          "url": {
+            "raw": "localhost:8080/api/get-workerpool-stats",
+            "host": [
+              "localhost"
+            ],
+            "port": "8080",
+            "path": [
+              "api",
+              "get-workerpool-stats"
+            ]
+          }
+        },
+        "response": []
+      },
+      {
+        "name": "Pre Batch Process",
+        "protocolProfileBehavior": {
+          "disableBodyPruning": true
+        },
+        "request": {
+          "method": "POST",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n    \"total_data\": 1000,\n    \"chunk_size\": 100,\n    \"concurrency\": 5,\n    \"data\": [\n        {\n            \"chunk_id\": 1,\n            \"data\": [\n                1,\n                2,\n                3,\n                4,\n                5,\n                6,\n                7,\n                8,\n                9,\n                10\n            ]\n        },\n        {\n            \"chunk_id\": 2,\n            \"data\": [\n                11,\n                12,\n                13,\n                14,\n                15,\n                16,\n                17,\n                18,\n                19,\n                20\n            ]\n        },\n        {\n            \"chunk_id\": 3,\n            \"data\": [\n                21,\n                22,\n                23,\n                24,\n                25,\n                26,\n                27,\n                28,\n                29,\n                30\n            ]\n        }\n        // Add more data chunks as needed\n    ]\n}"
+          },
+          "url": {
+            "raw": "http://localhost:8080/api/pre-batch-process",
+            "protocol": "http",
+            "host": [
+              "localhost"
+            ],
+            "port": "8080",
+            "path": [
+              "api",
+              "pre-batch-process"
+            ]
+          }
+        },
+        "response": []
+      },
+      {
+        "name": "Post Batch Process",
+        "protocolProfileBehavior": {
+          "disableBodyPruning": true
+        },
+        "request": {
+          "method": "POST",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n    \"data\": [\n        1,\n        2,\n        3,\n        4,\n        5,\n        6,\n        7,\n        8,\n        9,\n        10,\n        11,\n        12,\n        13,\n        14,\n        15,\n        16,\n        17,\n        18,\n        19,\n        20,\n        21,\n        22,\n        23,\n        24,\n        25,\n        26,\n        27,\n        28,\n        29,\n        30,\n        31,\n        32,\n        33,\n        34,\n        35,\n        36,\n        37,\n        38,\n        39,\n        40,\n        41,\n        42,\n        43,\n        44,\n        45,\n        46,\n        47,\n        48,\n        49,\n        50\n    ],\n    \"chunkSize\": 2,\n    \"concurrency\": 2\n}"
+          },
+          "url": {
+            "raw": "http://localhost:8080/api/post-batch-process",
+            "protocol": "http",
+            "host": [
+              "localhost"
+            ],
+            "port": "8080",
+            "path": [
+              "api",
+              "post-batch-process"
+            ]
+          }
+        },
+        "response": []
+      }
+    ]
+  }
+}
