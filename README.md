@@ -128,8 +128,3 @@ You can find the postman collection [here](https://api.postman.com/collections/2
 ## Contributing
 
 Contributions are welcome! If you have any suggestions, feature requests, or bug reports, please open an issue or submit a pull request.
-
-
-## License
-
-The Worker Pool with Batching library is open source and available under the [MIT License](LICENSE).
