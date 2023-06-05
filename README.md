@@ -121,10 +121,6 @@ To handle termination signals and ensure graceful shutdown of the worker pool, u
 workerpool.WaitForTerminationSignal(wp)
 ```
 
-## Postman Collection
-You can find the postman collection [here](https://api.postman.com/collections/26985860-37d342e8-ee60-42f3-9576-726b7ab4e80b?access_key=PMAT-01H1K0YJ7KBZYHX0SAY5BZCQJJ)
-
-
 ## Contributing
 
 Contributions are welcome! If you have any suggestions, feature requests, or bug reports, please open an issue or submit a pull request.
