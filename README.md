@@ -32,7 +32,7 @@ Import the Worker Pool with Batching library into your Go code:
 
 ```go
 import (
-    "github.com/NikhilRyan/go-workerpool"
+    "github.com/NikhilRyan/go-routine-worker-pool"
 )
 ```
 
