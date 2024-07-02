@@ -15,7 +15,7 @@ The Worker Pool with Batching is a Go library that provides a scalable and concu
 To install the Worker Pool with Batching library, use the following command:
 
 ```
-go get github.com/NikhilRyan/go-workerpool
+go get github.com/NikhilRyan/go-routine-worker-pool
 ```
 
 ## Dependencies
